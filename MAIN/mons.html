@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monopoly Simulation</title>
+    <style>
+        body {
+            font-<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monopoly Simulation</title>
+    <link rel="stylesheet" href="Styles/styles.css">
+</head>
+<body>
+    <img src="mons.jpg" alt="MONO">
+    <h1>Monopoly Simulation</h1>
+    <div id="controls">
+        <label for="numPlayers">Number of Players:</label>
+        <select id="numPlayers">
+            <option value="0" selected>Select amount of AI players</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+        </select>
+        <br><br>
+        <label for="rules">Select Rule:</label>
+        <select id="rules">
+            <option value="none" selected>None</option>
+            <option value="freeParking">Free Parking Money</option>
+        </select>
+        <br><br>
+        <button onclick="simulateGames()">Simulate Games</button>
+    </div>
+    <div id="results"></div>
+    <script src="Scripts/script.js"></script>
+</body>
+</html>: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #000000; /* Black background */
+            color: #ffffff; /* White text color */
+        }
+
+        h1 {
+            margin: 0;
+            padding: 20px;
+            color: #ffffff; /* White text color */
+        }
+
+        #controls, #results {
+            margin-top: 20px;
+            text-align: center;
+            background-color: #111111; /* Slightly lighter black background for contrast */
+            color: #ffffff; /* White text color */
+            border: 1px solid #333333; /* Darker border for contrast */
+            padding: 20px;
+        }
+
+        #results {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .game-result {
+            border: 1px solid #333333; /* Darker border for contrast */
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #111111; /* Slightly lighter black background for contrast */
+            color: #ffffff; /* White text color */
+        }
+
+        button {
+            background-color: #333333; /* Dark background for button */
+            color: #ffffff; /* White text color */
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #444444; /* Slightly lighter dark background on hover */
+        }
+
+        label, select {
+            color: #ffffff; /* White text color for labels and select elements */
+        }
+
+        select {
+            background-color: #333333; /* Dark background for select box */
+            color: #ffffff; /* White text color */
+            border: 1px solid #333333; /* Dark border for select box */
+            padding: 5px;
+        }
+
+        option {
+            background-color: #111111; /* Slightly lighter background for options */
+            color: #ffffff; /* White text color */
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <img src="LOGO/MONS.png" alt="MONO" height=100px width=100px>
+    <h1>Monopoly Simulator</h1>
+    <div id="controls">
+        <label for="numPlayers">Number of Players:</label>
+        <select id="numPlayers">
+            <option value="0" selected>Select amount of AI players</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+        </select>
+        <br><br>
+        <label for="rules">Select Rule:</label>
+        <select id="rules">
+            <option value="none" selected>None</option>
+            <option value="freeParking">Free Parking Money</option>
+        </select>
+        <br><br>
+        <button onclick="simulateGames()">Simulate Game</button>
+    </div>
+    <div id="results"></div>
+    <script>
+        const boardSize = 40;
+        const goMoney = 200;
+        const freeParkingMoney = 9999;
+        const houseCost = 50;
+        const hotelCost = 100;
+
+        const properties = [
+            { id: 0, name: 'Go', type: 'special' },
+            { id: 1, name: 'Old Kent Road', cost: 60, rent: 2, color: 'brown' },
+            { id: 2, name: 'Community Chest', type: 'special' },
+            { id: 3, name: 'Whitechapel Road', cost: 60, rent: 4, color: 'brown' },
+            { id: 4, name: 'Income Tax', type: 'special', tax: 200 },
+            { id: 5, name: 'King’s Cross Station', cost: 200, rent: 25 },
+            { id: 6, name: 'The Angel Islington', cost: 100, rent: 6, color: 'lightblue' },
+            { id: 7, name: 'Chance', type: 'special' },
+            { id: 8, name: 'Euston Road', cost: 100, rent: 6, color: 'lightblue' },
+            { id: 9, name: 'Pentonville Road', cost: 120, rent: 8, color: 'lightblue' },
+            { id: 10, name: 'Jail', type: 'special' },
+            { id: 11, name: 'Pall Mall', cost: 140, rent: 10, color: 'pink' },
+            { id: 12, name: 'Electric Company', cost: 150, rent: 12 },
+            { id: 13, name: 'Whitehall', cost: 140, rent: 10, color: 'pink' },
+            { id: 14, name: 'Northumberland Avenue', cost: 160, rent: 12, color: 'pink' },
+            { id: 15, name: 'Marylebone Station', cost: 200, rent: 25 },
+            { id: 16, name: 'Bow Street', cost: 180, rent: 14, color: 'orange' },
+            { id: 17, name: 'Community Chest', type: 'special' },
+            { id: 18, name: 'Marlborough Street', cost: 180, rent: 14, color: 'orange' },
+            { id: 19, name: 'Vine Street', cost: 200, rent: 16, color: 'orange' },
+            { id: 20, name: 'Free Parking', type: 'special' },
+            { id: 21, name: 'Strand', cost: 220, rent: 18, color: 'red' },
+            { id: 22, name: 'Chance', type: 'special' },
+            { id: 23, name: 'Fleet Street', cost: 220, rent: 18, color: 'red' },
+            { id: 24, name: 'Trafalgar Square', cost: 240, rent: 20, color: 'red' },
+            { id: 25, name: 'Fenchurch St Station', cost: 200, rent: 25 },
+            { id: 26, name: 'Leicester Square', cost: 260, rent: 22, color: 'yellow' },
+            { id: 27, name: 'Coventry Street', cost: 260, rent: 22, color: 'yellow' },
+            { id: 28, name: 'Water Works', cost: 150, rent: 12 },
+            { id: 29, name: 'Piccadilly', cost: 280, rent: 24, color: 'yellow' },
+            { id: 30, name: 'Go to Jail', type: 'special' },
+            { id: 31, name: 'Regent Street', cost: 300, rent: 26, color: 'green' },
+            { id: 32, name: 'Oxford Street', cost: 300, rent: 26, color: 'green' },
+            { id: 33, name: 'Community Chest', type: 'special' },
+            { id: 34, name: 'Bond Street', cost: 320, rent: 28, color: 'green' },
+            { id: 35, name: 'Liverpool Street Station', cost: 200, rent: 25 },
+            { id: 36, name: 'Chance', type: 'special' },
+            { id: 37, name: 'Park Lane', cost: 350, rent: 35, color: 'darkblue' },
+            { id: 38, name: 'Luxury Tax', type: 'special', tax: 75 },
+            { id: 39, name: 'Mayfair', cost: 400, rent: 50, color: 'darkblue' }
+        ];
+
+        class Player {
+            constructor(name) {
+                this.name = name;
+                this.position = 0;
+                this.money = 1500;
+                this.properties = [];
+                this.jailTurns = 0;
+                this.bankrupt = false;
+                this.actions = [];
+                this.wins = 0;
+                this.losses = 0;
+            }
+
+            move(steps) {
+                if (this.jailTurns > 0) {
+                    this.jailTurns--;
+                    this.actions.push(`${this.name} is in jail and loses a turn.`);
+                    return;
+                }
+                this.position = (this.position + steps) % boardSize;
+                if (this.position === 0) {
+                    this.money += goMoney; // Passing "Go"
+                    this.actions.push(`${this.name} passes Go and collects $${goMoney}.`);
+                }
+                this.actions.push(`${this.name} moves to ${properties[this.position].name}.`);
+            }
+
+            buyProperty(property) {
+                if (property.owner === undefined && this.money >= property.cost) {
+                    this.money -= property.cost;
+                    property.owner = this.name;
+                    this.properties.push(property);
+                    this.actions.push(`${this.name} buys ${property.name} for $${property.cost}.`);
+                }
+            }
+
+            payRent(property) {
+                if (property.owner && property.owner !== this.name) {
+                    let rentPayment = property.rent;
+                    if (property.hotels > 0) {
+                        rentPayment = property.rent * 5; // Rent with hotel
+                    } else if (property.houses > 0) {
+                        rentPayment = property.rent + property.houses * 10; // Rent with houses
+                    }
+                    this.money -= rentPayment;
+                    const owner = players.find(p => p.name === property.owner);
+                    if (owner) {
+                        owner.money += rentPayment;
+                        this.actions.push(`${this.name} pays $${rentPayment} rent to ${owner.name} for ${property.name}.`);
+                    }
+                }
+            }
+
+            handleSpecial(property, rules) {
+                switch (property.name) {
+                    case 'Income Tax':
+                        this.money -= property.tax;
+                        this.actions.push(`${this.name} pays $${property.tax} income tax.`);
+                        break;
+                    case 'Luxury Tax':
+                        this.money -= property.tax;
+                        this.actions.push(`${this.name} pays $${property.tax} luxury tax.`);
+                        break;
+                    case 'Go to Jail':
+                        this.position = 10;
+                        this.jailTurns = 2;
+                        this.actions.push(`${this.name} goes to jail and loses 2 turns.`);
+                        break;
+                    case 'Free Parking':
+                        if (rules.freeParking) {
+                            this.money += freeParkingMoney;
+                            this.actions.push(`${this.name} lands on Free Parking and collects $${freeParkingMoney}.`);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            purchaseBuilding(property) {
+                if (property.type === 'special') return;
+
+                const setProperties = properties.filter(p => p.color === property.color && p.owner === this.name);
+                if (setProperties.length === 3) { // For 3-property sets
+                    this.buyHouseOrHotel(property, setProperties);
+                }
+            }
+
+            buyHouseOrHotel(property, setProperties) {
+                if (setProperties.every(p => p.houses < 4)) {
+                    if (this.money >= houseCost) {
+                        property.houses++;
+                        this.money -= houseCost;
+                        this.actions.push(`${this.name} buys a house on ${property.name} for $${houseCost}.`);
+                    } else {
+                        this.actions.push(`${this.name} does not have enough money to buy a house.`);
+                    }
+                } else if (property.houses === 4 && this.money >= hotelCost) {
+                    property.hotels = 1;
+                    this.money -= hotelCost;
+                    this.actions.push(`${this.name} buys a hotel on ${property.name} for $${hotelCost}.`);
+                }
+            }
+
+            declareBankruptcy() {
+                properties.forEach(property => {
+                    if (property.owner === this.name) {
+                        property.owner = undefined;
+                        property.houses = 0;
+                        property.hotels = 0;
+                    }
+                });
+                this.money = 0;
+                this.bankrupt = true;
+                this.actions.push(`${this.name} goes bankrupt.`);
+            }
+
+            recordWin() {
+                this.wins++;
+            }
+
+            recordLoss() {
+                this.losses++;
+            }
+        }
+
+        let players = [];
+        let rules = { freeParking: false };
+
+        function resetGame(numPlayers) {
+            players = Array.from({ length: numPlayers }, (_, i) => new Player(`Player ${i + 1}`));
+
+            players.forEach(player => {
+                player.position = 0;
+                player.money = 1500;
+                player.properties = [];
+                player.jailTurns = 0;
+                player.bankrupt = false;
+                player.actions = [];
+                player.wins = 0;
+                player.losses = 0;
+            });
+
+            properties.forEach(property => {
+                property.owner = undefined;
+                property.houses = 0;
+                property.hotels = 0;
+            });
+        }
+
+        function simulateGame() {
+            const numPlayers = parseInt(document.getElementById('numPlayers').value);
+            rules.freeParking = document.getElementById('rules').value === 'freeParking';
+            resetGame(numPlayers);
+
+            let round = 0;
+            let winner = null;
+            let reason = '';
+
+            while (round < 100 && players.filter(player => !player.bankrupt).length > 1) {
+                for (const player of players) {
+                    if (player.bankrupt) continue; // Skip bankrupt players
+
+                    const diceRoll = Math.floor(Math.random() * 6) + 1;
+                    player.move(diceRoll);
+                    const currentProperty = properties[player.position];
+
+                    if (currentProperty.type === 'special') {
+                        player.handleSpecial(currentProperty, rules);
+                    } else {
+                        player.payRent(currentProperty);
+                        player.buyProperty(currentProperty);
+                        player.purchaseBuilding(currentProperty);
+                    }
+
+                    if (player.money <= 0) {
+                        player.declareBankruptcy();
+                    }
+                }
+
+                const activePlayers = players.filter(player => !player.bankrupt);
+                if (activePlayers.length === 1) {
+                    winner = activePlayers[0];
+                    reason = 'Opponent/s went bankrupt';
+                    break;
+                }
+
+                round++;
+            }
+
+            if (!winner) {
+                winner = players.reduce((max, player) => player.money > max.money ? player : max, players[0]);
+                reason = 'Highest money after rounds';
+            }
+
+            players.forEach(player => {
+                if (player === winner) {
+                    player.recordWin();
+                } else {
+                    player.recordLoss();
+                }
+            });
+
+            return {
+                winner: winner.name,
+                reason: reason,
+                playerStats: players.map(player => ({
+                    name: player.name,
+                    money: player.money,
+                    properties: player.properties.map(p => `${p.name} (${p.houses} houses, ${p.hotels} hotels)`).join(', '),
+                    bankrupt: player.bankrupt,
+                    actions: player.actions.join('<br>'),
+                    wins: player.wins,
+                    losses: player.losses
+                }))
+            };
+        }
+
+        function simulateGames() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            const numPlayers = parseInt(document.getElementById('numPlayers').value);
+            if (numPlayers === 0) {
+                alert('Please select the number of players.');
+                return;
+            }
+
+            const winCounts = Array(numPlayers).fill(0);
+            const lossCounts = Array(numPlayers).fill(0);
+
+            for (let i = 0; i < 10; i++) {
+                const result = simulateGame();
+                const winnerIndex = players.findIndex(player => player.name === result.winner);
+                if (winnerIndex >= 0) {
+                    winCounts[winnerIndex]++;
+                }
+
+                players.forEach((player, index) => {
+                    if (player.name !== result.winner) {
+                        lossCounts[index]++;
+                    }
+                });
+
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'game-result';
+                resultDiv.innerHTML = `
+                    <strong>Game ${i + 1}:</strong><br>
+                    Winner: ${result.winner}<br>
+                    Reason: ${result.reason}<br>
+                    ${result.playerStats.map(stat => `
+                        <strong>${stat.name}:</strong><br>
+                        Money: $${stat.money}<br>
+                        Properties: ${stat.properties || 'None'}<br>
+                        Bankrupt: ${stat.bankrupt ? 'Yes' : 'No'}<br>
+                        Actions:<br>${stat.actions}<br>
+                        Wins: ${stat.wins}<br>
+                        Losses: ${stat.losses}
+                    `).join('<br><br>')}
+                `;
+                resultsDiv.appendChild(resultDiv);
+            }
+
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'game-result';
+            summaryDiv.innerHTML = `
+                <strong>Summary:</strong><br>
+                ${players.map((player, index) => `
+                    ${player.name} Wins: ${winCounts[index]}<br>
+                    ${player.name} Losses: ${lossCounts[index]}
+                `).join('<br>')}
+            `;
+            resultsDiv.appendChild(summaryDiv);
+        }
+    </script>
+</body>
+</html>
+    <h9>&copy James Turner 2024</h9>
